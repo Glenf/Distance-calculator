@@ -5,23 +5,35 @@
 	
 	<title>Välimatkalaskuri</title>
 	
+	<style type="text/css" media="screen">
+		#map{
+			width:300px;
+			height:300px;
+		}
+	</style>
+	
 	<script src="http://maps.googleapis.com/maps/api/js?sensor=false&language=fi"></script>
 	<script>
 		var map,
 			geocoder,
-			origin = "Oulu, Finland",
-			destination = "Helsinki, Finland",
+			bounds =  new google.maps.LatLngBounds(),
+			markersArray = [],
+			origin,
+			destination,
 			init = function(){
 				var opts = {
-					mapTypeId: google.maps.MapTypeId.ROADMAP
+					center: new google.maps.LatLng(65, 24),
+					mapTypeId: google.maps.MapTypeId.ROADMAP,
+					zoom: 4
 				};
+				map = new google.maps.Map(document.getElementById('map'),opts);
 				geocoder = new google.maps.Geocoder();
 			},
 			calculateDistance = function(){
 				var service = new google.maps.DistanceMatrixService();
 				
-				origin = document.getElementById('origin').value;
-				destination = document.getElementById('destination').value;
+				origin = document.getElementById('origin').value + ", Finland";
+				destination = document.getElementById('destination').value + ", Finland";
 				
 				service.getDistanceMatrix({
 					origins : [origin],
@@ -35,7 +47,7 @@
 			},
 			callback = function(response, status){
 				if (status != google.maps.DistanceMatrixStatus.OK) {
-					alert('Error was: ' + status);
+					alert('Virhe: ' + status);
 				} else {
 					var origins = response.originAddresses,
 						destinations = response.destinationAddresses,
@@ -43,29 +55,51 @@
 						results;
 		          
 					outputDiv.innerHTML = '';
-					// deleteOverlays();
+					deleteOverlay();
 
 					for (var i = 0; i < origins.length; i++) {
 						results = response.rows[i].elements;
-		            // addMarker(origins[i], false);
-					for (var j = 0; j < results.length; j++) {
-						outputDiv.innerHTML += origins[i] + " -> " + destinations[j]
-						+ ": " + results[j].distance.text + ". Aika "
-						+ results[j].duration.text + "<br />";
-		            }
-		          }
-		        }
-		        
+		            	addMarker(origins[i]);
+						for (var j = 0; j < results.length; j++) {
+							outputDiv.innerHTML += origins[i] + " -> " + destinations[j]
+							+ ": " + results[j].distance.text + ". Aika "
+							+ results[j].duration.text + "<br />";
+			            	addMarker(destinations[i]);
+						}
+					}
+				}
+			},
+			addMarker = function(location) {
+				geocoder.geocode({'address': location}, function(results, status) {
+					if (status == google.maps.GeocoderStatus.OK) {
+						bounds.extend(results[0].geometry.location);
+						map.fitBounds(bounds);
+						var marker = new google.maps.Marker({
+							map: map,
+							position: results[0].geometry.location
+						});
+						markersArray.push(marker);
+					} else {
+						alert("Geocode was not successful for the following reason: "+ status);
+					}
+				});
+			},
+			deleteOverlay = function(){
+				if (markersArray) {
+					for (i in markersArray) {
+						markersArray[i].setMap(null);
+					}
+					markersArray.length = 0;
+				}
 			};
 		
 	</script>
 </head>	
-<body>
+<body onload="init()">
 	<h1>Välimatkalaskuri</h1>
 
 	<pre>
 		TODO:
-		* Välimatkaa ei saa näyttää ilman Googlen karttaa
 		* Tyylittely
 		* Lisää optioita (tolls, highways)
 		* Mahdollisuus välietapiin
@@ -79,10 +113,10 @@
 		<option>Alahärmä</option> <option>Alajärvi</option><option>Alastaro </option><option>Alavieska </option><option>Alavus </option><option>Anjalankoski </option><option>Anttola </option><option>Artjärvi </option><option>Asikkala </option><option>Askainen </option><option>Askola </option><option>Aura </option><option>Dragsfjärd </option><option>Elimäki </option><option>Eno </option><option>Enonkoski </option><option>Enontekiö </option><option>Enontekiö, Kaaresuvanto </option><option>Enontekiö, Kilpisjärvi </option><option>Enontekiö, Kivilompolo </option><option>Enontekiö, Palojoensuu </option><option>Espoo </option><option>Eura </option><option>Eurajoki </option><option>Evijärvi </option><option>Forssa </option><option>Haapajärvi </option><option>Haapavesi </option><option>Hailuoto </option><option>Halikko </option><option>Halsua </option><option>Hamina </option><option>Hankasalmi </option><option>Hanko </option><option>Harjavalta </option><option>Hartola </option><option>Hattula </option><option>Hauho </option><option>Haukipudas </option><option>Haukivuori </option><option>Hausjärvi </option><option>Heinola (yhdistetty) </option><option>Heinävesi </option><option>Helsinki </option><option>Himanka </option><option>Hirvensalmi </option><option>Hollola </option><option>Honkajoki </option><option>Houtskari </option><option>Huittinen </option><option>Humppila </option><option>Hyrynsalmi </option><option>Hyvinkää </option><option>Hämeenkoski </option><option>Hämeenkyrö </option><option>Hämeenlinna </option><option>Ii </option><option>Iisalmi </option><option>Iitti </option><option>Ikaalinen </option><option>Ilmajoki </option><option>Ilomantsi </option><option>Imatra </option><option>Inari kko </option><option>Inari, Ivalo </option><option>Inari, Näätämö </option><option>Inari, Raja-Jooseppi </option><option>Inari, Repojoki </option><option>Iniö, Laupunen, Kustavi </option><option>Inkoo </option><option>Isojoki </option><option>Isokyrö </option><option>Jaala </option><option>Jalasjärvi </option><option>Janakkala </option><option>Joensuu </option><option>Jokioinen </option><option>Joroinen </option><option>Joutsa </option><option>Joutseno </option><option>Juankoski </option><option>Jurva </option><option>Juuka </option><option>Juupajoki </option><option>Juva </option><option>Jyväskylä </option><option>Jyväskylä, Säynätsalo </option><option>Jyväskylän mlk, Palokka </option><option>Jyväskylän mlk, Tikkakoski </option><option>Jyväskylän mlk, Vaajakoski </option><option>Jämijärvi </option><option>Jämsä </option><option>Jämsä, Kaipola </option><option>Jämsänkoski </option><option>Jäppilä </option><option>Järvenpää </option><option>Kaarina </option><option>Kaavi </option><option>Kajaani </option><option>Kalajoki </option><option>Kalvola </option><option>Kangasala </option><option>Kangaslampi </option><option>Kangasniemi </option><option>Kankaanpää </option><option>Kannonkoski </option><option>Kannus </option><option>Karijoki </option><option>Karinainen </option><option>Karjaa </option><option>Karjalohja </option><option>Karkkila </option><option>Karstula </option><option>Karttula </option><option>Karvia </option><option>Kaskinen </option><option>Kauhajoki </option><option>Kauhava </option><option>Kauniainen </option><option>Kaustinen </option><option>Keitele </option><option>Kemi </option><option>Kemijärvi </option><option>Keminmaa </option><option>Kemiö </option><option>Kempele </option><option>Kerava </option><option>Kerimäki </option><option>Kestilä </option><option>Kesälahti </option><option>Keuruu </option><option>Keuruu, Haapamäki </option><option>Kihniö </option><option>Kiihtelysvaara </option><option>Kiikala </option><option>Kiikoinen </option><option>Kiiminki </option><option>Kinnula </option><option>Kirkkonummi </option><option>Kisko </option><option>Kitee </option><option>Kittilä </option><option>Kiukainen </option><option>Kiuruvesi </option><option>Kivijärvi </option><option>Kodisjoki </option><option>Kokemäki </option><option>Kokkola </option><option>Kolari </option><option>Konnevesi </option><option>Kontiolahti </option><option>Korpilahti </option><option>Korppoo </option><option>Korsnäs </option><option>Kortesjärvi </option><option>Koski </option><option>Kotka </option><option>Kouvola </option><option>Kristiinankaupunki </option><option>Kruunupyy </option><option>Kuhmalahti </option><option>Kuhmo </option><option>Kuhmo, Vartius, raja </option><option>Kuhmoinen </option><option>Kuivaniemi </option><option>Kullaa </option><option>Kuopio </option><option>Kuopio, Riistavesi </option><option>Kuorevesi </option><option>Kuortane </option><option>Kurikka </option><option>Kuru </option><option>Kustavi </option><option>Kuusamo </option><option>Kuusankoski </option><option>Kuusjoki </option><option>Kylmäkoski </option><option>Kyyjärvi </option><option>Kälviä </option><option>Kärkölä </option><option>Kärsämäki </option><option>Köyliö </option><option>Lahti </option><option>Laihia </option><option>Laitila </option><option>Lammi </option><option>Lapinjärvi </option><option>Lapinlahti </option><option>Lappajärvi </option><option>Lappeenranta </option><option>Lappeenranta, Nuijamaa </option><option>Lappi tl </option><option>Lapua </option><option>Laukaa </option><option>Laukaa, Lievestuore </option><option>Lavia </option><option>Lehtimäki </option><option>Leivonmäki </option><option>Lemi </option><option>Lempäälä </option><option>Lemu </option><option>Leppävirta </option><option>Lestijärvi </option><option>Lieksa </option><option>Lieksa, Koli </option><option>Lieto </option><option>Liljendal </option><option>Liminka </option><option>Liperi </option><option>Lohja (yhdistetty) </option><option>Lohtaja </option><option>Loimaa </option><option>Loimaan mlk </option><option>Loppi </option><option>Loviisa </option><option>Luhanka </option><option>Lumijoki </option><option>Luopioinen </option><option>Luoto </option><option>Luumäki </option><option>Luvia </option><option>Längelmäki </option><option>Maalahti </option><option>Maaninka </option><option>Maksamaa </option><option>Marttila </option><option>Masku </option><option>Mellilä </option><option>Merijärvi </option><option>Merikarvia </option><option>Merimasku </option><option>Miehikkälä </option><option>Mietoinen </option><option>Mikkeli </option><option>Mikkeli, Otava </option><option>Mouhijärvi </option><option>Muhos </option><option>Multia </option><option>Muonio </option><option>Mustasaari </option><option>Mustasaari, Raippaluoto </option><option>Muurame </option><option>Muurla </option><option>Mynämäki </option><option>Myrskylä </option><option>Mäntsälä </option><option>Mänttä </option><option>Mäntyharju </option><option>Naantali </option><option>Nakkila </option><option>Nastola </option><option>Nauvo </option><option>Nilsiä </option><option>Nivala </option><option>Nokia </option><option>Noormarkku </option><option>Nousiainen </option><option>Nummi-Pusula </option><option>Nurmes </option><option>Nurmijärvi </option><option>Nurmo </option><option>Närpiö </option><option>Oravainen </option><option>Orimattila </option><option>Oripää </option><option>Orivesi </option><option>Oulainen </option><option>Oulu </option><option>Oulunsalo </option><option>Outokumpu </option><option>Padasjoki </option><option>Paimio </option><option>Paltamo </option><option>Parainen </option><option>Parikkala </option><option>Parkano </option><option>Pattijoki </option><option>Pedersöre </option><option>Pelkosenniemi </option><option>Pello </option><option>Perho </option><option>Pernaja </option><option>Perniö </option><option>Pertteli </option><option>Pertunmaa </option><option>Peräseinäjoki </option><option>Petäjävesi </option><option>Pieksämäki </option><option>Pieksänmaa, kesk. </option><option>Pielavesi </option><option>Pietarsaari </option><option>Pihtipudas </option><option>Piikkiö </option><option>Piippola </option><option>Pirkkala </option><option>Pohja </option><option>Polvijärvi </option><option>Pomarkku </option><option>Pori </option><option>Pori, Meri-Pori </option><option>Pornainen </option><option>Porvoo (yhdistetty) </option><option>Posio </option><option>Pudasjärvi </option><option>Pukkila </option><option>Pulkkila </option><option>Punkaharju </option><option>Punkalaidun </option><option>Puolanka </option><option>Puumala </option><option>Pyhtää </option><option>Pyhäjoki </option><option>Pyhäjärvi </option><option>Pyhäntä </option><option>Pyhäranta </option><option>Pyhäselkä </option><option>Pylkönmäki </option><option>Pälkäne </option><option>Pöytyä </option><option>Raahe </option><option>Raisio </option><option>Rantasalmi </option><option>Rantsila </option><option>Ranua </option><option>Rauma </option><option>Rautalampi </option><option>Rautavaara </option><option>Rautjärvi </option><option>Reisjärvi </option><option>Renko </option><option>Riihimäki </option><option>Ristiina </option><option>Ristijärvi </option><option>Rovaniemi, Saarenkylä </option><option>Rovaniemi, Meltaus </option><option>Rovaniemi, Pirttikoski </option><option>Rovaniemi </option><option>Ruokolahti </option><option>Ruotsinpyhtää </option><option>Ruovesi </option><option>Rusko </option><option>Ruukki </option><option>Rymättylä </option><option>Rääkkylä </option><option>Saari </option><option>Saarijärvi </option><option>Sahalahti </option><option>Salla </option><option>Salo </option><option>Sammatti </option><option>Sauvo </option><option>Savitaipale </option><option>Savonlinna </option><option>Savonranta </option><option>Savukoski </option><option>Seinäjoki </option><option>Sievi </option><option>Siikainen </option><option>Siikajoki </option><option>Siilinjärvi </option><option>Simo </option><option>Sipoo </option><option>Siuntio </option><option>Sodankylä </option><option>Sodankylä, Vuojärvi </option><option>Sodankylä, Vuotso </option><option>Soini </option><option>Somero </option><option>Sonkajärvi </option><option>Sonkajärvi, Sukeva </option><option>Sotkamo </option><option>Sulkava </option><option>Sumiainen </option><option>Suodenniemi </option><option>Suolahti </option><option>Suomenniemi </option><option>Suomusjärvi </option><option>Suomussalmi, kko. </option><option>Suomussalmi, Ämmänsaari </option><option>Suonenjoki </option><option>Sysmä </option><option>Säkylä </option><option>Särkisalo </option><option>Taipalsaari </option><option>Taivalkoski </option><option>Taivassalo </option><option>Tammela </option><option>Tammisaari </option><option>Tammisaari, Tenhola </option><option>Tampere </option><option>Tarvasjoki </option><option>Temmes </option><option>Tervo </option><option>Tervola </option><option>Teuva </option><option>Tohmajärvi </option><option>Toholampi </option><option>Toijala </option><option>Toivakka </option><option>Tornio </option><option>Turku </option><option>Tuulos </option><option>Tuupovaara </option><option>Tuusniemi </option><option>Tuusula </option><option>Tyrnävä </option><option>Töysä </option><option>Töysä, Tuuri </option><option>Ullava </option><option>Ulvila </option><option>Urjala </option><option>Utajärvi </option><option>Utsjoki, Karigasniemi </option><option>Utsjoki, Nuorgam </option><option>Utsjoki, Utsjoki </option><option>Uukuniemi </option><option>Uurainen </option><option>Uusikaarlepyy </option><option>Uusikaupunki </option><option>Uusikaupunki, Kalanti </option><option>Vaala </option><option>Vaasa </option><option>Vahto </option><option>Valkeakoski </option><option>Valkeala </option><option>Valtimo </option><option>Vammala </option><option>Vampula </option><option>Vantaa </option><option>Varkaus </option><option>Varpaisjärvi </option><option>Vehkalahti </option><option>Vehmaa </option><option>Vehmersalmi </option><option>Velkua </option><option>Vesanto </option><option>Vesilahti </option><option>Veteli </option><option>Vieremä </option><option>Vihanti </option><option>Vihti </option><option>Viiala </option><option>Viitasaari </option><option>Viljakkala </option><option>Vilppula </option><option>Vimpeli </option><option>Virolahti </option><option>Virolahti, Vaalimaa, raja </option><option>Virrat </option><option>Virtasalmi </option><option>Vuolijoki </option><option>Vähäkyrö </option><option>Värtsilä kko </option><option>Värtsilä, Niirala, raja </option><option>Västanfjärd </option><option>Vöyri </option><option>Yli-Ii </option><option>Ylihärmä </option><option>Ylikiiminki </option><option>Ylistaro </option><option>Ylitornio </option><option>Ylivieska </option><option>Ylämaa </option><option>Yläne </option><option>Ylöjärvi </option><option>Ypäjä </option><option>Äetsä </option><option>Ähtäri </option><option>Äänekoski </option><option>Äänekoski, Konginkangas </option>
 	</select>
 	
-	<p><button type="button" onclick="calculateDistance();">Calculate
-      distances</button></p>
-    <div id="outputDiv"></div>
-    
+	<p><button type="button" onclick="calculateDistance();">Calculat distances</button></p>
+	<div id="outputDiv"></div>
+	
+    <div id="map"></div>
 
 </body>
 </html>
