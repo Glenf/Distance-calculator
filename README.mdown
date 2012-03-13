@@ -1,0 +1,4 @@
+# Dinstance calculator
+
+This is a fast attempt to create a simple distance calculator with Google Maps.§:wq
+
